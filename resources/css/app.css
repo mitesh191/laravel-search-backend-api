@@ -1,0 +1,261 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+@layer base {
+    body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+        background: #f3f6f8;
+        color: #17212b;
+        font-family: var(--font-sans);
+    }
+}
+
+@layer components {
+    .search-page {
+        display: grid;
+        min-height: 100vh;
+        place-items: center;
+        padding: 24px;
+    }
+
+    .search-card {
+        width: min(100%, 620px);
+        padding: clamp(24px, 5vw, 40px);
+        border: 1px solid #dce4e9;
+        border-radius: 20px;
+        background: #fff;
+        box-shadow: 0 24px 64px rgb(23 33 43 / 9%);
+    }
+
+    .eyebrow {
+        margin: 0 0 10px;
+        color: #17736a;
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+    .search-card h1 {
+        margin: 0;
+        font-size: clamp(2rem, 6vw, 2.7rem);
+        letter-spacing: -0.04em;
+    }
+
+    .intro {
+        margin: 12px 0 32px;
+        color: #53616d;
+        line-height: 1.6;
+    }
+
+    .search-card label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .search-control {
+        position: relative;
+    }
+
+    .search-control input {
+        width: 100%;
+        box-sizing: border-box;
+        min-height: 56px;
+        padding: 14px 18px;
+        border: 1px solid #c7d2d9;
+        border-radius: 12px;
+        background: #fff;
+        color: inherit;
+        font: inherit;
+        transition: border-color 150ms ease, box-shadow 150ms ease;
+    }
+
+    .search-control input:focus-visible {
+        border-color: #17736a;
+        outline: none;
+        box-shadow: 0 0 0 4px rgb(23 115 106 / 13%);
+    }
+
+    .search-status {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        margin-top: 12px;
+        padding: 16px;
+        border: 1px solid #e1e8ed;
+        border-radius: 12px;
+        background: #f8fafb;
+        color: #53616d;
+    }
+
+    .search-status[hidden] {
+        display: none;
+    }
+
+    .search-status-icon {
+        position: relative;
+        display: grid;
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        place-items: center;
+        border-radius: 50%;
+        background: #e8f3f1;
+        color: #17736a;
+    }
+
+    .search-status-icon::before {
+        width: 12px;
+        height: 12px;
+        border: 2px solid currentcolor;
+        border-radius: 50%;
+        content: "";
+    }
+
+    .search-status-icon::after {
+        position: absolute;
+        top: 23px;
+        left: 22px;
+        width: 7px;
+        height: 2px;
+        border-radius: 2px;
+        background: currentcolor;
+        content: "";
+        transform: rotate(45deg);
+        transform-origin: left center;
+    }
+
+    .search-status-content {
+        display: grid;
+        gap: 4px;
+        padding-top: 1px;
+        font-size: 0.88rem;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    .search-status-content strong {
+        color: #17212b;
+        font-size: 0.93rem;
+        font-weight: 600;
+    }
+
+    .search-status.is-searching .search-status-icon::before {
+        border-right-color: transparent;
+        animation: search-status-spin 800ms linear infinite;
+    }
+
+    .search-status.is-searching .search-status-icon::after {
+        display: none;
+    }
+
+    .search-status.is-error {
+        border-color: #f0d7d4;
+        background: #fff8f7;
+    }
+
+    .search-status.is-error .search-status-icon {
+        background: #f8e7e5;
+        color: #a63d35;
+    }
+
+    .search-status.is-error .search-status-icon::before {
+        width: auto;
+        height: auto;
+        border: 0;
+        border-radius: 0;
+        content: "!";
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .search-status.is-error .search-status-icon::after {
+        display: none;
+    }
+
+    @keyframes search-status-spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .suggestions {
+        display: none;
+        max-height: 280px;
+        margin: 8px 0 0;
+        padding: 4px;
+        overflow-y: auto;
+        border: 1px solid #dce4e9;
+        border-radius: 12px;
+        list-style: none;
+    }
+
+    .suggestions.is-open {
+        display: block;
+    }
+
+    .suggestion-option {
+        width: 100%;
+        padding: 11px 12px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+        font: inherit;
+        text-align: left;
+    }
+
+    .suggestion-option:hover,
+    .suggestion-option:focus-visible {
+        background: #eef6f4;
+        outline: none;
+    }
+
+    .selection-status {
+        min-height: 24px;
+        margin: 24px 0 0;
+        color: #17736a;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .hint {
+        margin: 10px 0 0;
+        color: #65737d;
+        font-size: 0.8rem;
+        line-height: 1.5;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            scroll-behavior: auto !important;
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+
+    @media (max-width: 520px) {
+        .search-page {
+            padding: 14px;
+        }
+
+        .search-card {
+            padding: 25px 20px;
+        }
+    }
+}

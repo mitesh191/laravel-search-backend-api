@@ -1,0 +1,111 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: ${APP_URL:-http://127.0.0.1:8000}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: ${MYSQL_DATABASE:-laravel_search_api}
+      DB_USERNAME: ${MYSQL_USER:-search_api}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-local-search-change-me}
+      CACHE_STORE: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: sync
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ""
+      REDIS_PORT: "6379"
+    ports:
+      - "127.0.0.1:${APP_PORT:-8000}:80"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - app-storage:/var/www/html/storage
+    mem_limit: 1536m
+    cpus: 2.0
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1/up >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  db:
+    # Pin to the newest tested patch; MySQL 8.4.13 segfaults on this Docker host.
+    image: mysql:8.4.11
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-laravel_search_api}
+      MYSQL_USER: ${MYSQL_USER:-search_api}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-local-search-change-me}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-local-root-change-me}
+    command:
+      - --innodb-buffer-pool-size=${MYSQL_BUFFER_POOL_SIZE:-4G}
+      - --innodb-buffer-pool-dump-at-shutdown=ON
+      - --innodb-buffer-pool-load-at-startup=ON
+      - --innodb-file-per-table=ON
+      - --innodb-flush-log-at-trx-commit=1
+      - --innodb-read-io-threads=8
+      - --innodb-write-io-threads=4
+      - --innodb-io-capacity=1000
+      - --max-connections=${MYSQL_MAX_CONNECTIONS:-150}
+      - --table-open-cache=2000
+      - --skip-name-resolve
+    volumes:
+      - mysql-data:/var/lib/mysql
+    mem_limit: 5g
+    cpus: 4.0
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h 127.0.0.1 -uroot --password=\"$${MYSQL_ROOT_PASSWORD}\" --silent",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "192mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - redis-data:/data
+    mem_limit: 384m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  phpmyadmin:
+    image: phpmyadmin:5.2.3-apache
+    profiles: ["tools"]
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_PORT: "3306"
+      PMA_ARBITRARY: "0"
+    ports:
+      - "127.0.0.1:${PMA_PORT:-8081}:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 512m
+
+volumes:
+  app-storage:
+  mysql-data:
+  redis-data:
