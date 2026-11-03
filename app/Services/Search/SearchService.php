@@ -64,12 +64,14 @@ class SearchService
         foreach (array_slice($terms, 1) as $index => $term) {
             $alias = 'matched_terms_'.$index;
 
-            $query->whereExists(function ($query) use ($alias, $term): void {
-                $query->selectRaw('1')
-                    ->from('search_record_terms as '.$alias)
-                    ->whereColumn($alias.'.search_record_id', 'candidate_terms.search_record_id')
-                    ->where($alias.'.term', 'like', $term.'%');
-            });
+            $query->whereRaw(
+                '(SELECT '.$alias.'.search_record_id
+                FROM search_record_terms AS '.$alias.'
+                WHERE '.$alias.'.search_record_id = candidate_terms.search_record_id
+                    AND '.$alias.'.term LIKE ?
+                LIMIT 1) IS NOT NULL',
+                [$term.'%'],
+            );
         }
 
         $suggestions = $query

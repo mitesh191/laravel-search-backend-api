@@ -31,6 +31,18 @@ class SearchApiTest extends TestCase
         ]);
     }
 
+    public function test_search_requires_every_indexed_term_to_match(): void
+    {
+        SearchRecord::query()->create(['content' => '25 London Road Market Park']);
+        SearchRecord::query()->create(['content' => 'London Avenue Park']);
+        SearchRecord::query()->create(['content' => 'Cambridge Road Garden']);
+
+        $this->getJson('/api/search?q=London+Road')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.content', '25 London Road Market Park');
+    }
+
     public function test_a_suggestion_token_counts_at_most_one_selection(): void
     {
         $record = SearchRecord::query()->create(['content' => '25 London Road Market Park']);
